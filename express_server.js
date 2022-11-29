@@ -33,8 +33,12 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-console.log(req.body);
-res.send("Ok");
+  //we will send a new id here when given a long URL 
+  let id = generateRandomString(6);
+  
+  urlDatabase[id] = res.body.longURL;
+  res.status(200)
+  res.send(`Your short url is ${id}`);
 });
 
 app.get("/urls/:id", (req, res) => {
