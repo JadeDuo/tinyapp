@@ -35,19 +35,21 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   //we will send a new id here when given a long URL 
   let id = generateRandomString(6);
-  console.log(req.body)
   urlDatabase[id] = req.body.longURL;
   res.status(200)
-  res.redirect(`/urls/:${id}`);
+  res.redirect(`/urls/${id}`);
 });
 
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  console.log(templateVars)
+  console.log(urlDatabase)
   res.render("urls_show", templateVars)
 });
 
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id]
+  res.redirect("/urls")
 });
 
 app.get("/u/:id", (req, res) => {
