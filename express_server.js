@@ -12,15 +12,11 @@ const urlDatabase = {
 };
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.send("Hello! Please go to /urls");
 });
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.get("/urls", (req, res) => {
@@ -42,13 +38,17 @@ app.post("/urls", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
-  console.log(templateVars)
-  console.log(urlDatabase)
   res.render("urls_show", templateVars)
 });
 
+app.post("/urls/:id", (req, res) => {
+  let newLongURL = req.body.editURL;
+  urlDatabase[req.params.id] = newLongURL
+  res.redirect("back")
+})
+
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id]
+  delete urlDatabase[req.params.id];
   res.redirect("/urls")
 });
 
@@ -66,7 +66,7 @@ const getRandomInt = function (max) {
 }
 
 const generateRandomString = function(numDigits) {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let str = "";
   for (let i = 0; i < numDigits; i++) {
     str += chars[getRandomInt(chars.length)];
