@@ -35,10 +35,10 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   //we will send a new id here when given a long URL 
   let id = generateRandomString(6);
-  
-  urlDatabase[id] = res.body.longURL;
+  console.log(req.body)
+  urlDatabase[id] = req.body.longURL;
   res.status(200)
-  res.send(`Your short url is ${id}`);
+  res.redirect(`/urls/:${id}`);
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -46,6 +46,10 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars)
 });
 
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
