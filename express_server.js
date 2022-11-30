@@ -12,31 +12,40 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
-//dead
-app.get("/", (req, res) => {
-  res.send("Hello! Please go to /urls");
-});
-//dead
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-//displays main URL page
+
+const userDatabase = {
+  testID: {
+    id: "testID",
+    email: "jade.duong@telus.com",
+    password: "coolguy123",
+  }
+}
+
+//displays URLs page
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
   res.render("urls_index", templateVars);
 });
 
-//displays the url creation page
+//displays URL creation page
 app.get("/urls/new", (req, res) => {
   const templateVars = { username: req.cookies["username"] };
   res.render("urls_new", templateVars);
 });
 
+app.get("/register", (req, res) => {
+  const templateVars = { username: req.cookies["username"] };
+  res.render("urls_register", templateVars);
+});
+
 //displays the results page after making new shorturl
+//keep as final display GET
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies["username"] };
   res.render("urls_show", templateVars);
 });
+//------------------------------------
+
 
 //creates new short url - on button press
 app.post("/urls", (req, res) => {
@@ -54,30 +63,35 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("back");
 });
 
-//allows delete button to remove that entry from DB
+//removes coresponding URL from DB - on button press
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
 
-//allows a user to login using header button
+app.post("/register", (req, res) => {
+
+})
+
+//login via header. stores username as cookie - on button press
 app.post("/login", (req, res) => {
   res.cookie("username", req.body.username);
   res.redirect("back");
 });
 
+//logout via header. deletes username cookie - on button press
 app.post("/logout", (req, res) => {
   res.clearCookie("username");
   res.redirect("/urls");
 });
 
-//redirects to long url with u/ID
+//redirect function to long url with u/ID
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
 
-//listen text
+//listen text when starting server
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
