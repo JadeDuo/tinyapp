@@ -1,5 +1,5 @@
 <header>
-  <nav class="navbar navbar-expand-md navbar-dark bg-success">
+  <nav class="navbar navbar-expand-md navbar-dark" style="background-color: #4bc2c2">
     <a class="navbar-brand" href="/urls">TinyApp</a>
     <button
       class="navbar-toggler"
@@ -13,29 +13,31 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
+      <div class="navbar-nav" style="width: 100%;">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        
+           
+      </div>
         <% if(username !== undefined){ %>
-          <h6> logged in as <%= username %></h6>
-          <form method="POST" action="/logout">
-            <button type="submit">Logout</button>
-          </form>
-        <% } else{ %>  
+          
+            <span style="color:white">Logged in as <%= username %></span>
+            <form class="form-inline" method="POST" action="/logout">
+              <button type="submit" class="btn btn-light btn-sm">Logout</button>
+            </form>
+          
+        <% } else{ %>
+          <span style="color:white">Login:</span>
           <form method="POST" action="/login">
-            <label for="username">Enter a username:</label>
             <input
               class="form-control"
               type="text"
               name="username"
-              placeholder="eg. coolCoder5000"
-              style="width: 300px; margin: 5px"
+              placeholder="username"
+              style=" width: 200px; margin: 5px"
             />
-            <button type="submit">Submit</button>
-          </form>
-       <% } %>
-      </div>
-    </div>
+            <button class="btn btn-light btn-sm" type="submit">Submit</button>
+          </form>  
+        <% } %>
+    </div>  
   </nav>
 </header>
