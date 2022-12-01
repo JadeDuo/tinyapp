@@ -10,8 +10,14 @@ app.use(cookieParser());
 
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    ownerID: "testID2"
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    ownerID: "testID2"
+  },
 };
 
 const userDatabase = {
@@ -34,7 +40,14 @@ const userDatabase = {
 //displays URLs page
 app.get("/urls", (req, res) => {
   const userID = req.cookies["user_id"];
-  const templateVars = { urls: urlDatabase, user: userDatabase[userID] };
+  if (!userID) {
+    return res.redirect("/login");
+  }
+  const userURLs = urlsForUser(userID)
+  const templateVars = {
+    urls: urlDatabase,
+    user: userDatabase[userID],
+    userURLs  };
   return res.render("urls_index", templateVars);
 });
 
@@ -42,7 +55,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const userID = req.cookies["user_id"];
   const templateVars = { user: userDatabase[userID] };
-  if (userID){
+  if (!userID){
     return res.redirect("/login");
   }
   return res.render("urls_new", templateVars);
@@ -99,7 +112,13 @@ app.get("/login/:err", (req, res) => {
 //displays the results page after making new shorturl
 app.get("/urls/:id", (req, res) => {
   const userID = req.cookies["user_id"]
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: userDatabase[userID] };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: userDatabase[userID] };
+  if (!userID) {
+    return res.status(400).send("Your are not logged in, please login to continue.");
+  } 
+  if (urlDatabase[req.params.id].ownerID !== userID) {
+    return res.status(400).send("You do not own this short code, please try again.");
+  }
   return res.render("urls_show", templateVars);
 });
 //---------------POST w button-----------------
@@ -112,19 +131,45 @@ app.post("/urls", (req, res) => {
     return res.status(400).send("You are not logged in, please login and try again")
   }
   let id = generateRandomString(6);
-  urlDatabase[id] = req.body.longURL;
+  urlDatabase[id] = { 
+    longURL: req.body.longURL,
+    ownerID: userID,
+  }
+  console.log(urlDatabase)
   return res.status(200).redirect(`/urls/${id}`);
 });
 
 //updates the long url - on button press
+//returns error paths if user isn't logged in, ID doesn't exist or shortURL is not owned by user.
 app.post("/urls/:id", (req, res) => {
+  const userID = req.cookies["user_id"]
+  if (!userID) {
+    return res.status(400).send("You are not logged in, please login to continue.");
+  }
+  if (!req.params.id) {
+    return res.status(400).send("shortURL not found, please try again.")
+  }
+  if (urlDatabase[req.params.id].ownerID !== userID) {
+    return res.status(400).send("Oops, looks like you don't own that short URL. Please try again.");
+  }
   let newLongURL = req.body.editURL;
-  urlDatabase[req.params.id] = newLongURL;
+  urlDatabase[req.params.id].longURL = newLongURL;
   return res.redirect("back");
 });
 
 //removes coresponding URL from DB - on button press
 app.post("/urls/:id/delete", (req, res) => {
+  const userID = req.cookies["user_id"]
+  if (!userID) {
+    return res.status(400).send("You are not logged in, please login to continue.");
+  }
+  if (!req.params.id) {
+    return res.status(400).send("shortURL not found, please try again.")
+  }
+  if (urlDatabase[req.params.id].ownerID !== userID) {
+    return res.status(400).send("Oops, looks like you don't own that short URL. Please try again.");
+  }
+  console.log(req.params.id)
   delete urlDatabase[req.params.id];
   return res.redirect("/urls");
 });
@@ -168,7 +213,7 @@ app.post("/logout", (req, res) => {
 
 //redirect functionality to long url with u/ID
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
   if(!longURL) {
     return res.status(400).send("Unknown short url, refirect failed. Please check your spelling.")
   }
@@ -180,8 +225,21 @@ app.listen(PORT, () => {
   console.log(`Tiny app listening on port ${PORT}!`);
 });
 
+//returns the URLs logged in user owns.
+const urlsForUser = function (id) {
+  let userURLs = {}
+  for (let key in urlDatabase) {
+    if ( urlDatabase[key].ownerID === id) {
+      userURLs[key] = { 
+        longURL: urlDatabase[key].longURL,
+        ownerID: id,
+      }
+    }
+  }
+  return userURLs;
+}
 
-//
+//searches userDB to return user object if it exists
 const getUserByEmail = function (email) {
   for(let id in userDatabase) {
     if (userDatabase[id].email === email.toLowerCase()){

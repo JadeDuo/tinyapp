@@ -32,10 +32,10 @@
           </tr>
         </thead>
         <tbody>
-          <% for (let id in urls) { %>
+          <% for (let id in userURLs) { %>
             <tr>
               <td><%= id %></td>
-              <td><%= urls[id] %></td>
+              <td><%= userURLs[id].longURL %></td>
               <td>
                   <form method="POST" action="/urls/<%= id %>/delete">
                     <button type=“submit” class="btn btn-info">Delete</button>
@@ -44,6 +44,7 @@
               <td>
                 <form method="GET" action="/urls/<%= id %>">
                   <button type=“submit” class="btn btn-info">Edit</button>
+                </form>  
               </td>
             </tr>
           <% } %>
