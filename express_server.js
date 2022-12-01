@@ -19,6 +19,11 @@ const userDatabase = {
     id: "testID",
     email: "jade.duong@telus.com",
     password: "coolguy123",
+  },
+  testID2: {
+    id: "testID2",
+    email: "a@a.com",
+    password: "a"
   }
 }
 
@@ -30,26 +35,26 @@ const userDatabase = {
 app.get("/urls", (req, res) => {
   const userID = req.cookies["user_id"];
   const templateVars = { urls: urlDatabase, user: userDatabase[userID] };
-  res.render("urls_index", templateVars);
+  return res.render("urls_index", templateVars);
 });
 
 //displays URL creation page
 app.get("/urls/new", (req, res) => {
   const userID = req.cookies["user_id"];
   const templateVars = { user: userDatabase[userID] };
-  res.render("urls_new", templateVars);
+  return res.render("urls_new", templateVars);
 });
 
 app.get("/register", (req, res) => {
   const userID = req.cookies["user_id"];
   const templateVars = { user: userDatabase[userID] };
-  res.render("urls_register", templateVars);
+  return res.render("urls_register", templateVars);
 });
 
 app.get("/login", (req, res) => {
   const userID = req.cookies["user_id"];
   const templateVars = { user: userDatabase[userID] };
-  res.render("urls_login", templateVars);
+  return res.render("urls_login", templateVars);
 });
 
 // displays the register page with any errors that occured during registration
@@ -63,15 +68,31 @@ app.get("/register/:err", (req, res) => {
   }
   const userID = req.cookies["user_id"];
   const templateVars = { user: userDatabase[userID], errorMsg };
-  res.render("urls_register", templateVars )
+  return res.render("urls_register", templateVars )
 })
+
+//displays the login page with appropriate errors
+app.get("/login/:err", (req, res) => {
+  let errorMsg = ""
+  if(req.params.err === "notfound") {
+    errorMsg = "This email is not in our database. Please register instead"
+  }
+  if(req.params.err === "mismatch") {
+    errorMsg = "Password does not match, please try again."
+  }
+  const userID = req.cookies["user_id"];
+  const templateVars = { user: userDatabase[userID], errorMsg };
+  return res.render("urls_login", templateVars )
+})
+
+
 
 //displays the results page after making new shorturl
 //keep as final display GET
 app.get("/urls/:id", (req, res) => {
   const userID = req.cookies["user_id"]
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: userDatabase[userID] };
-  res.render("urls_show", templateVars);
+  return res.render("urls_show", templateVars);
 });
 //---------------POST w button-----------------
 
@@ -80,35 +101,31 @@ app.post("/urls", (req, res) => {
   //we will send a new id here when given a long URL
   let id = generateRandomString(6);
   urlDatabase[id] = req.body.longURL;
-  res.status(200);
-  res.redirect(`/urls/${id}`);
+  return res.status(200).redirect(`/urls/${id}`);
 });
 
 //updates the long url - on button press
 app.post("/urls/:id", (req, res) => {
   let newLongURL = req.body.editURL;
   urlDatabase[req.params.id] = newLongURL;
-  res.redirect("back");
+  return res.redirect("back");
 });
 
 //removes coresponding URL from DB - on button press
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 //creates new user and adds to userDB
-//need to find a way to make alert pop in the render
 app.post("/register", (req, res) => {
   //if user fails to fill out one or more fields
   if (req.body.email === "" || req.body.password === "") {
-    res.status(400)
-    res.redirect("/register/invalid")
+    return res.status(400).redirect("/register/invalid")
   }
   //if email already exists in userDB
   if(getUserByEmail(req.body.email) !== null) {
-    res.status(400)
-    res.redirect("/register/exists")
+    return res.status(400).redirect("/register/exists")
   }
   //if user doesn't already exist
   id = generateRandomString(6);
@@ -117,34 +134,35 @@ app.post("/register", (req, res) => {
     email: req.body.email.toLowerCase(),
     password: req.body.password
   }
-  res.cookie("user_id", id)
-  console.log(userDatabase)
-  res.redirect("/urls")
+  return res.cookie("user_id", id).redirect("/urls")
 })
 
-//login via header. stores username as cookie - on button press
-//requires refactor
+//login on login page. stores user as cookie - on button press
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("back");
+  let user = getUserByEmail(req.body.email)
+  if (!user){
+    return res.status(400).redirect("/login/notfound")
+  }
+  if (req.body.password !== userDatabase[user].password) {
+    return res.status(400).redirect("/login/mismatch")
+  }
+  return res.cookie("user_id", user).redirect("urls");
 });
 
-//logout via header. deletes username cookie - on button press
-//requires refactor
+//logout via header. deletes user_id cookie - on button press
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
-  res.redirect("/urls");
+  return res.clearCookie("user_id").redirect("/login");
 });
 
-//redirect function to long url with u/ID
+//redirect functionality to long url with u/ID
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  return res.redirect(longURL);
 });
 
 //listen text when starting server
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`Tiny app listening on port ${PORT}!`);
 });
 
 
@@ -158,11 +176,12 @@ const getUserByEmail = function (email) {
   return null;
 }
 
-//helper function for generate 
+//Randomization helper function for generateRandomString
 const getRandomInt = function(max) {
   return Math.floor(Math.random() * max);
 };
 
+//Creates userIDs and shortURL IDs. numDigits is 6 for both IDs.
 const generateRandomString = function(numDigits) {
   const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let str = "";
