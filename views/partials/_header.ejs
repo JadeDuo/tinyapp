@@ -16,11 +16,12 @@
       <div class="navbar-nav" style="width: 100%;">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+        <a class="nav-item nav-link" href="/register">Create Account</a>
            
       </div>
-        <% if(username !== undefined){ %>
+        <% if(user !== undefined){ %>
           
-            <span style="color:white">Logged in as <%= username %></span>
+            <span style="color:white">Logged in as <%= user.email %></span>
             <form class="form-inline" method="POST" action="/logout">
               <button type="submit" class="btn btn-light btn-sm">Logout</button>
             </form>
@@ -31,8 +32,8 @@
             <input
               class="form-control"
               type="text"
-              name="username"
-              placeholder="username"
+              name="email"
+              placeholder="email"
               style=" width: 200px; margin: 5px"
             />
             <button class="btn btn-light btn-sm" type="submit">Submit</button>

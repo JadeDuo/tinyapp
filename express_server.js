@@ -1,5 +1,6 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
+const { request } = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -21,31 +22,58 @@ const userDatabase = {
   }
 }
 
+
+
+//------GET displays------
+
 //displays URLs page
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  const userID = req.cookies["user_id"];
+  const templateVars = { urls: urlDatabase, user: userDatabase[userID] };
   res.render("urls_index", templateVars);
 });
 
 //displays URL creation page
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const userID = req.cookies["user_id"];
+  const templateVars = { user: userDatabase[userID] };
   res.render("urls_new", templateVars);
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const userID = req.cookies["user_id"];
+  const templateVars = { user: userDatabase[userID] };
   res.render("urls_register", templateVars);
 });
+
+app.get("/login", (req, res) => {
+  const userID = req.cookies["user_id"];
+  const templateVars = { user: userDatabase[userID] };
+  res.render("urls_login", templateVars);
+});
+
+// displays the register page with any errors that occured during registration
+app.get("/register/:err", (req, res) => {
+  let errorMsg = ""
+  if(req.params.err === "invalid") {
+    errorMsg = "Please ensure all fields are filled."
+  }
+  if(req.params.err === "exists") {
+    errorMsg = "This email has already been registered, please login instead"
+  }
+  const userID = req.cookies["user_id"];
+  const templateVars = { user: userDatabase[userID], errorMsg };
+  res.render("urls_register", templateVars )
+})
 
 //displays the results page after making new shorturl
 //keep as final display GET
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies["username"] };
+  const userID = req.cookies["user_id"]
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: userDatabase[userID] };
   res.render("urls_show", templateVars);
 });
-//------------------------------------
-
+//---------------POST w button-----------------
 
 //creates new short url - on button press
 app.post("/urls", (req, res) => {
@@ -69,17 +97,40 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
+//creates new user and adds to userDB
+//need to find a way to make alert pop in the render
 app.post("/register", (req, res) => {
-
+  //if user fails to fill out one or more fields
+  if (req.body.email === "" || req.body.password === "") {
+    res.status(400)
+    res.redirect("/register/invalid")
+  }
+  //if email already exists in userDB
+  if(getUserByEmail(req.body.email) !== null) {
+    res.status(400)
+    res.redirect("/register/exists")
+  }
+  //if user doesn't already exist
+  id = generateRandomString(6);
+  userDatabase[id] = {
+    id: id,
+    email: req.body.email.toLowerCase(),
+    password: req.body.password
+  }
+  res.cookie("user_id", id)
+  console.log(userDatabase)
+  res.redirect("/urls")
 })
 
 //login via header. stores username as cookie - on button press
+//requires refactor
 app.post("/login", (req, res) => {
   res.cookie("username", req.body.username);
   res.redirect("back");
 });
 
 //logout via header. deletes username cookie - on button press
+//requires refactor
 app.post("/logout", (req, res) => {
   res.clearCookie("username");
   res.redirect("/urls");
@@ -96,6 +147,18 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+
+//
+const getUserByEmail = function (email) {
+  for(let id in userDatabase) {
+    if (userDatabase[id].email === email.toLowerCase()){
+      return id;
+    }
+  }
+  return null;
+}
+
+//helper function for generate 
 const getRandomInt = function(max) {
   return Math.floor(Math.random() * max);
 };
