@@ -38,22 +38,33 @@ app.get("/urls", (req, res) => {
   return res.render("urls_index", templateVars);
 });
 
-//displays URL creation page
+//displays URL creation page when logged in, else redirects to login
 app.get("/urls/new", (req, res) => {
   const userID = req.cookies["user_id"];
   const templateVars = { user: userDatabase[userID] };
+  if (userID){
+    return res.redirect("/login");
+  }
   return res.render("urls_new", templateVars);
 });
 
+//displays Register page, redirects to index if logged in
 app.get("/register", (req, res) => {
   const userID = req.cookies["user_id"];
   const templateVars = { user: userDatabase[userID] };
+  if (userID){
+    return res.redirect("/urls");
+  }
   return res.render("urls_register", templateVars);
 });
 
+//displays Register page, redirects to index if logged in
 app.get("/login", (req, res) => {
   const userID = req.cookies["user_id"];
   const templateVars = { user: userDatabase[userID] };
+  if (userID){
+    return res.redirect("/urls");
+  }
   return res.render("urls_login", templateVars);
 });
 
@@ -85,10 +96,7 @@ app.get("/login/:err", (req, res) => {
   return res.render("urls_login", templateVars )
 })
 
-
-
 //displays the results page after making new shorturl
-//keep as final display GET
 app.get("/urls/:id", (req, res) => {
   const userID = req.cookies["user_id"]
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: userDatabase[userID] };
@@ -97,8 +105,12 @@ app.get("/urls/:id", (req, res) => {
 //---------------POST w button-----------------
 
 //creates new short url - on button press
+//prevents use when not logged in
 app.post("/urls", (req, res) => {
-  //we will send a new id here when given a long URL
+  const userID = req.cookies["user_id"]
+  if (!userID) {
+    return res.status(400).send("You are not logged in, please login and try again")
+  }
   let id = generateRandomString(6);
   urlDatabase[id] = req.body.longURL;
   return res.status(200).redirect(`/urls/${id}`);
@@ -157,6 +169,9 @@ app.post("/logout", (req, res) => {
 //redirect functionality to long url with u/ID
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
+  if(!longURL) {
+    return res.status(400).send("Unknown short url, refirect failed. Please check your spelling.")
+  }
   return res.redirect(longURL);
 });
 
