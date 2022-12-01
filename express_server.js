@@ -1,6 +1,7 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
 const { request } = require("express");
+const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -10,30 +11,12 @@ app.use(cookieParser());
 
 
 const urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    ownerID: "testID2"
-  },
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    ownerID: "testID2"
-  },
+  
 };
 
 const userDatabase = {
-  testID: {
-    id: "testID",
-    email: "jade.duong@telus.com",
-    password: "coolguy123",
-  },
-  testID2: {
-    id: "testID2",
-    email: "a@a.com",
-    password: "a"
-  }
+  
 }
-
-
 
 //------GET displays------
 
@@ -135,7 +118,6 @@ app.post("/urls", (req, res) => {
     longURL: req.body.longURL,
     ownerID: userID,
   }
-  console.log(urlDatabase)
   return res.status(200).redirect(`/urls/${id}`);
 });
 
@@ -169,7 +151,6 @@ app.post("/urls/:id/delete", (req, res) => {
   if (urlDatabase[req.params.id].ownerID !== userID) {
     return res.status(400).send("Oops, looks like you don't own that short URL. Please try again.");
   }
-  console.log(req.params.id)
   delete urlDatabase[req.params.id];
   return res.redirect("/urls");
 });
@@ -189,7 +170,7 @@ app.post("/register", (req, res) => {
   userDatabase[id] = {
     id: id,
     email: req.body.email.toLowerCase(),
-    password: req.body.password
+    password: bcrypt.hashSync(req.body.password, 10)
   }
   return res.cookie("user_id", id).redirect("/urls")
 })
@@ -200,8 +181,8 @@ app.post("/login", (req, res) => {
   if (!user){
     return res.status(400).redirect("/login/notfound")
   }
-  if (req.body.password !== userDatabase[user].password) {
-    return res.status(400).redirect("/login/mismatch")
+  if (!bcrypt.compareSync(req.body.password, userDatabase[user].password)) {
+    return res.status(400).redirect("/login/mismatch");
   }
   return res.cookie("user_id", user).redirect("urls");
 });
