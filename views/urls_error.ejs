@@ -14,18 +14,15 @@
       integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
       crossorigin="anonymous"
     />
-
     <title>Uh oh! - TinyApp</title>
   </head>
-
   <body>
     <%- include('partials/_header') %>
-   
     <main style="margin: 1em;">
-      <h3>Something went wrong!</h3>
+      <h2>Something went wrong!</h2>
       
       <% if(locals.errKey) { %>
-      <h1><%= errorList[errKey] %></h1>
+      <h3><%= errorList[errKey] %></h3>
       <% } %>
     </main>
     <!-- Bootstrap JS -->

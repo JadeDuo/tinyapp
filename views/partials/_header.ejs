@@ -14,9 +14,10 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav" style="width: 100%;">
+        <% if(user !== undefined){ %>
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        <% if(user === undefined){ %>
+        <% } else { %>
           <a class="nav-item nav-link" href="/register">Create Account</a>
           <a class="nav-item nav-link" href="/login">Login</a>
           <% } %>

@@ -14,13 +14,10 @@
       integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
       crossorigin="anonymous"
     />
-
     <title>New Registration - TinyApp</title>
   </head>
-
   <body>
     <%- include('partials/_header') %>
-   
     <main style="margin: 1em;">
       <h3>Account Creation</h3>
       <form class="form-inline" action="/register" method="POST">
@@ -33,7 +30,6 @@
             placeholder="eg. me@email.com"
             style="width: 200px; margin: 1em"
           />
-          
           <label for="password">password</label>
           <input
             class="form-control"
@@ -42,12 +38,10 @@
             placeholder=""
             style="width: 200px; margin: 1em"
           />
-          <button type="submit" class="btn btn-primary">Register</button>
+          <button type="submit" class="btn btn-info">Register</button>
         </div>
       </form>
-      <% if(locals.errorMsg) { %>
-      <h1><%= errorMsg %></h1>
-      <% } %>
+      <p>Already have an account? Click <a href='/login'>here</a> to login instead!</p>
     </main>
     <!-- Bootstrap JS -->
     <script
