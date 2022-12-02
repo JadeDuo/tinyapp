@@ -21,6 +21,7 @@ TinyApp is a full stack web application built with Node and Express that allows 
 - Run the development web server using the `node express_server.js` command.
 
 ## How to Use
+
 * Begin by registering your account on the /register page.
 * Navigate to the new URL page at /urls/new and input the full URL you'd like to shorten.
 ** Application currently does not support URL validation.
@@ -29,6 +30,10 @@ TinyApp is a full stack web application built with Node and Express that allows 
 * The MyURLs page shows you all the ShortURLs you've made, and their associated LongURL.
 * You can remove an entry by pressing the delete button, but be careful, that will also cease the redirect functionality if you've shared the ShortURL
 * If you need to make a change, you can return to the individual ShortID page by clicking the edit button
+
+## Things to Consider
+
+At this time, this application does not utilize a proper database, and entries are stored in objects server-side. This means any time the host server is terminated or offline, all user and url entries except those hard coded into the DB will be erased.
 
 
 
