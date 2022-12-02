@@ -15,8 +15,8 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
 
-
 const urlDatabase = {
+
   
 };
 
@@ -28,9 +28,21 @@ const userDatabase = {
   },
 };
 
+const errorList = {
+
+  "ind-login":  "You are not logged in, please login and try again",
+  "reg-invalid": "Please ensure all fields are filled.",
+  "reg-exists": "This email has already been registered, please login instead",
+  "log-notfound": "This email is not in our database. Please register instead",
+  "log-mismatch": "Password does not match, please try again.",
+  "url-notfound": "Hmm, that shortURL was not found, please check your spelling and try again.",
+  "url-unowned": "Oops, looks like you don't own that short URL. Please try again.",
+  
+  
+}
 //------GET displays------
 
-//displays URLs page
+//displays users URLs page, redirects to 
 app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
   if (!userID) {
@@ -74,46 +86,25 @@ app.get("/login", (req, res) => {
   return res.render("urls_login", templateVars);
 });
 
-// displays the register page with any errors that occured during registration
-app.get("/register/:err", (req, res) => {
-  let errorMsg = "";
-  if (req.params.err === "invalid") {
-    errorMsg = "Please ensure all fields are filled.";
-  }
-  if (req.params.err === "exists") {
-    errorMsg = "This email has already been registered, please login instead";
-  }
+// Displays an error page with details on error and how to resolve.
+app.get("/error/:err", (req, res) => {
   const userID = req.session.user_id;
-  const templateVars = { user: userDatabase[userID], errorMsg };
-  return res.render("urls_register", templateVars);
+  const templateVars = { user: userDatabase[userID], errKey: req.params.err, errorList };
+  return res.render("urls_error", templateVars);
 });
-
-//displays the login page with appropriate errors
-app.get("/login/:err", (req, res) => {
-  let errorMsg = "";
-  if (req.params.err === "notfound") {
-    errorMsg = "This email is not in our database. Please register instead";
-  }
-  if (req.params.err === "mismatch") {
-    errorMsg = "Password does not match, please try again.";
-  }
-  const userID = req.session.user_id;
-  const templateVars = { user: userDatabase[userID], errorMsg };
-  return res.render("urls_login", templateVars);
-});
-
+ 
 //displays the results page after making new shorturl
 app.get("/urls/:id", (req, res) => {
   const userID = req.session.user_id;
   if (!userID) {
-    return res.status(400).send("You are not logged in, please login to continue.");
+    return res.redirect("/error/ind-login");
   }
   if (!urlDatabase[req.params.id]) {
-    return res.status(400).send("Oops! That short URL doesn't exist");
+    return res.redirect("/error/url-notfound");
   }
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: userDatabase[userID] };
   if (urlDatabase[req.params.id].ownerID !== userID) {
-    return res.status(400).send("You do not own this short code, please try again.");
+    return res.redirect("/error/url-unowned");
   }
   return res.render("urls_show", templateVars);
 });
@@ -124,7 +115,7 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls", (req, res) => {
   const userID = req.session.user_id;
   if (!userID) {
-    return res.status(400).send("You are not logged in, please login and try again");
+    return res.redirect("/error/ind-login")
   }
   let url = req.body.longURL;
   if (url.indexOf("http://") !== 0 || url.indexOf("https://") !== 0) {
@@ -143,13 +134,13 @@ app.post("/urls", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const userID = req.session.user_id;
   if (!userID) {
-    return res.status(400).send("You are not logged in, please login to continue.");
+    return res.redirect("/error/ind-login");
   }
   if (!urlDatabase[req.params.id]) {
-    return res.status(400).send("shortURL not found, please try again.");
+    return res.redirect("/error/url-notfound");
   }
   if (urlDatabase[req.params.id].ownerID !== userID) {
-    return res.status(400).send("Oops, looks like you don't own that short URL. Please try again.");
+    return res.redirect("url-unowned");
   }
   let newLongURL = req.body.editURL;
   if (newLongURL.indexOf("http://") !== 0 || newLongURL.indexOf("https://") !== 0) {
@@ -163,13 +154,13 @@ app.post("/urls/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   const userID = req.session.user_id;
   if (!userID) {
-    return res.status(400).send("You are not logged in, please login to continue.");
+    return res.redirect("/error/ind-login")
   }
   if (!urlDatabase[req.params.id]) {
-    return res.status(400).send("shortURL not found, please try again.");
+    return res.redirect("/error/url-notfound")
   }
   if (urlDatabase[req.params.id].ownerID !== userID) {
-    return res.status(400).send("Oops, looks like you don't own that short URL. Please try again.");
+    return res.redirect("/error/url-unowned");
   }
   delete urlDatabase[req.params.id];
   return res.redirect("/urls");
@@ -179,11 +170,11 @@ app.post("/urls/:id/delete", (req, res) => {
 app.post("/register", (req, res) => {
   //if user fails to fill out one or more fields
   if (req.body.email === "" || req.body.password === "") {
-    return res.status(400).redirect("/register/invalid");
+    return res.redirect("/error/reg-invalid");
   }
   //if email already exists in userDB
-  if (getUserByEmail(req.body.email, userDatabase) !== null) {
-    return res.status(400).redirect("/register/exists");
+  if (getUserByEmail(req.body.email, userDatabase) !== undefined) {
+    return res.redirect("/error/reg-exists");
   }
   //if user doesn't already exist
   const id = generateRandomString(6);
@@ -197,14 +188,14 @@ app.post("/register", (req, res) => {
   return res.redirect("/urls");
 });
 
-//login on login page. stores user as cookie - on button press
+//logs in and stores user as cookie - on button press
 app.post("/login", (req, res) => {
   let user = getUserByEmail(req.body.email, userDatabase);
   if (!user) {
-    return res.status(400).redirect("/login/notfound");
+    return res.redirect("/error/log-notfound");
   }
   if (!bcrypt.compareSync(req.body.password, userDatabase[user].password)) {
-    return res.status(400).redirect("/login/mismatch");
+    return res.redirect("/error/log-mismatch");
   }
   req.session.user_id = user;
   return res.redirect("urls");
@@ -220,7 +211,7 @@ app.post("/logout", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const urlObj = urlDatabase[req.params.id];
   if (!urlObj) {
-    return res.status(400).send("Unknown short url, refirect failed. Please check your spelling.");
+    return res.redirect("/error/url-notfound");
   }
   return res.redirect(urlObj.longURL);
 });

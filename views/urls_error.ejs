@@ -15,38 +15,17 @@
       crossorigin="anonymous"
     />
 
-    <title>New Registration - TinyApp</title>
+    <title>Uh oh! - TinyApp</title>
   </head>
 
   <body>
     <%- include('partials/_header') %>
    
     <main style="margin: 1em;">
-      <h3>Account Creation</h3>
-      <form class="form-inline" action="/register" method="POST">
-        <div class="form-group mb-2">
-          <label for="email">email</label>
-          <input
-            class="form-control"
-            type="text"
-            name="email"
-            placeholder="eg. me@email.com"
-            style="width: 200px; margin: 1em"
-          />
-          
-          <label for="password">password</label>
-          <input
-            class="form-control"
-            type="password"
-            name="password"
-            placeholder=""
-            style="width: 200px; margin: 1em"
-          />
-          <button type="submit" class="btn btn-primary">Register</button>
-        </div>
-      </form>
-      <% if(locals.errorMsg) { %>
-      <h1><%= errorMsg %></h1>
+      <h3>Something went wrong!</h3>
+      
+      <% if(locals.errKey) { %>
+      <h1><%= errorList[errKey] %></h1>
       <% } %>
     </main>
     <!-- Bootstrap JS -->
